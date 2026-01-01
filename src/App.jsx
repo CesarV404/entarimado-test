@@ -1,16 +1,6 @@
-import { useState } from "react";
-import BarcodeScanner from "react-qr-barcode-scanner";
-
-const bb = {
-  stroke: "#fff",
-  lineWidth: 4,
-  radii: 10,
-  gap: 0.5,
-  margin: 0.1,
-};
+import { useState, useRef } from "react";
 
 export default function App() {
-  const [data, setData] = useState();
   const [form, setForm] = useState({
     descripcion: "",
     codigo: "",
@@ -20,6 +10,30 @@ export default function App() {
   });
 
   const [lista, setLista] = useState([]);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [photo, setPhoto] = useState(null);
+
+  const startCamera = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }, // cámara trasera
+    });
+    videoRef.current.srcObject = stream;
+    videoRef.current.play();
+  };
+
+  const takePhoto = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    setPhoto(canvas.toDataURL("image/png"));
+  };
 
   const handleChange = (e) => {
     setForm({
@@ -52,14 +66,16 @@ export default function App() {
 
   return (
     <>
-      <div className="UTCScreen" style={{ display: "flex" }}>
-        <BarcodeScanner
-          formats={["UPC_A", "EAN_13"]}
-          onUpdate={(err, result) => {
-            if (result) setData(result.text);
-          }}
-        />
-        <div className="data">{data}</div>
+      <div>
+        <button onClick={startCamera}>Abrir cámara</button>
+
+        <video ref={videoRef} style={{ width: "100%" }} />
+
+        <button onClick={takePhoto}>Tomar foto</button>
+
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+
+        {photo && <img src={photo} alt="captura" style={{ width: "100%" }} />}
       </div>
       <div style={{ padding: 20, fontFamily: "Arial" }}>
         <h2>Registro</h2>
