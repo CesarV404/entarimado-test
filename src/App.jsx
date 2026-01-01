@@ -74,7 +74,7 @@ export default function App() {
       JsBarcode(canvas, valor, {
         format: "CODE128",
         width: 2,
-        height: 60,
+        height: 40,
         displayValue: false,
       });
 
@@ -192,7 +192,7 @@ export default function App() {
       </div>
 
       {/* LISTA */}
-      <h3>Lista</h3>
+      <h3>Lista - Marbetes: {lista.length}</h3>
 
       {lista.length === 0 && <p>No hay registros</p>}
 

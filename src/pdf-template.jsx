@@ -138,7 +138,8 @@ const Ticket = ({
     {/* Parte inferior */}
     <View style={styles.bottomRow}>
       <View style={styles.barcodeBox}>
-        <Image source={barcodeImg} />
+        <Image source={barcodeImg} style={{ margin: 2, padding: 0 }} />
+        <Text style={styles.label}>{codigo}</Text>
       </View>
 
       <View style={styles.piecesBox}>
