@@ -1,4 +1,24 @@
 import { useState } from "react";
+import {
+  BarcodeDetector,
+  ZXING_WASM_VERSION,
+  prepareZXingModule,
+} from "barcode-detector/ponyfill";
+
+prepareZXingModule({
+  overrides: {
+    locateFile: (path, prefix) => {
+      if (path.endsWith(".wasm")) {
+        return `https://unpkg.com/zxing-wasm@${ZXING_WASM_VERSION}/dist/reader/${path}`;
+      }
+      return prefix + path;
+    },
+  },
+});
+
+const barcodeDetector = new BarcodeDetector({
+  formats: ["ean_13", "code_128", "upc_a", "upc_e"],
+});
 
 export default function App() {
   const [form, setForm] = useState({
@@ -44,19 +64,24 @@ export default function App() {
     const file = e.target.files[0];
     if (!file) return;
 
-    console.log(file); // ← aquí recibes la foto
+    barcodeDetector.detect(file).then((barcodes) => {
+      console.log(barcodes);
+      if (barcodes.length === 0) {
+        return setForm({
+          ...form,
+          codigo: "000000000000",
+        });
+      }
+
+      setForm({
+        ...form,
+        codigo: barcodes[0].rawValue,
+      });
+    });
   };
 
   return (
     <>
-      <div>
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handlePhoto}
-        />
-      </div>
       <div style={{ padding: 20, fontFamily: "Arial" }}>
         <h2>Registro</h2>
 
@@ -76,6 +101,15 @@ export default function App() {
             placeholder="Código numérico"
             value={form.codigo}
             onChange={handleChange}
+          />
+
+          <br />
+
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handlePhoto}
           />
           <br />
 
