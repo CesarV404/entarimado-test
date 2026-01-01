@@ -55,6 +55,11 @@ export default function App() {
       <div className="UTCScreen" style={{ display: "flex" }}>
         <BarcodeScanner
           formats={["UPC_A"]}
+          videoConstraints={{
+            facingMode: { exact: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          }}
           onUpdate={(err, result) => {
             if (result) setData(result.text);
           }}
