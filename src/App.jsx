@@ -22,7 +22,7 @@ prepareZXingModule({
 });
 
 const barcodeDetector = new BarcodeDetector({
-  formats: ["ean_13", "code_128", "upc_a", "upc_e"],
+  formats: ["upc_a", "ean_13", "code_128"],
 });
 
 export default function App() {
@@ -99,9 +99,17 @@ export default function App() {
         });
       }
 
+      const barcodeValue = barcodes[0].rawValue;
+      const barcodeCleaned =
+        String(barcodeValue)[0] === "0"
+          ? String(barcodeValue).slice(1)
+          : String(barcodeValue);
+
+      const realFormat = barcodeCleaned.length === 12 ? "upc_a" : "ean_13";
+
       const barcodeImgBlob = await generarBarcodeBlob(
-        String(barcodes[0].rawValue),
-        barcodes[0].format
+        String(barcodeCleaned),
+        realFormat
       );
 
       const urlBarcode = URL.createObjectURL(barcodeImgBlob);
@@ -111,7 +119,7 @@ export default function App() {
 
       setForm({
         ...form,
-        codigo: barcodes[0].rawValue,
+        codigo: barcodeCleaned,
         barcodeImg: urlBarcode,
       });
     });
