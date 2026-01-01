@@ -21,35 +21,35 @@ export default function App() {
 
   const [lista, setLista] = useState([]);
   const videoRef = useRef(null);
-  const [isZoomed, setIsZomed] = useState(false);
 
   useEffect(() => {
-    if (videoRef === null) return;
-    if (isZoomed) return;
+    const interval = setInterval(() => {
+      const video = videoRef.current;
+      if (!video || !video.srcObject) return;
 
-    const video = videoRef.current;
-    if (!video || !video.srcObject) return;
+      const track = video.srcObject.getVideoTracks()[0];
+      if (!track) return;
 
-    const track = video.srcObject.getVideoTracks()[0];
-    if (!track) return;
+      const capabilities = track.getCapabilities?.();
+      if (!capabilities?.zoom) {
+        console.warn("Zoom no soportado en este dispositivo");
+        clearInterval(interval);
+        return;
+      }
 
-    const capabilities = track.getCapabilities?.();
-    if (!capabilities?.zoom) {
-      console.warn("Zoom no soportado en este dispositivo");
-      setIsZomed(true);
-      return;
-    }
+      track
+        .applyConstraints({
+          advanced: [{ zoom: 1 }],
+        })
+        .then(() => {
+          console.log("Zoom aplicado x1");
+          clearInterval(interval);
+        })
+        .catch(console.error);
+    }, 300);
 
-    track
-      .applyConstraints({
-        advanced: [{ zoom: 1 }],
-      })
-      .then(() => {
-        console.log("Zoom aplicado x1");
-        setIsZomed(true);
-      })
-      .catch(console.error);
-  }, [videoRef]);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleChange = (e) => {
     setForm({
@@ -85,10 +85,9 @@ export default function App() {
       <div className="UTCScreen" style={{ display: "flex" }}>
         <BarcodeScanner
           formats={["UPC_A"]}
+          videoRef={videoRef}
           videoConstraints={{
             facingMode: { exact: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
           }}
           onUpdate={(err, result) => {
             if (result) setData(result.text);
