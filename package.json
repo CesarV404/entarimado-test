@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.2",
+    "@syncfusion/ej2-barcode-generator": "^32.1.19",
     "barcode-detector": "^3.0.8",
+    "jsbarcode": "^3.12.1",
     "react": "^19.2.0",
     "react-barcode-scanner": "^4.0.0",
     "react-dom": "^19.2.0",
