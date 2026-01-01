@@ -40,7 +40,6 @@ export default function App() {
     setLista([]);
   };
 
-  function TakePhoto() {
   const handlePhoto = (e) => {
     const file = e.target.files[0];
     if (!file) return;
