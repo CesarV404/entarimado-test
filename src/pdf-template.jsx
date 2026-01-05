@@ -1,168 +1,102 @@
-// Ticket.jsx
-import {
-  View,
-  Text,
-  StyleSheet,
-  Page,
-  Document,
-  Image,
-} from "@react-pdf/renderer";
+import React from "react";
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
-  ticket: {
-    width: 240,
-    height: 148.75,
-    border: "1pt solid #000",
-    padding: 8,
-    margin: "0 6",
-    fontSize: 9,
+  page: {
+    padding: 30,
   },
-
-  header: {
+  table: {
+    display: "table",
+    width: "auto",
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+  },
+  tableRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
   },
-
-  logo: {
+  tableCol: {
+    width: "33.33%",
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    padding: 5,
+  },
+  tableHeader: {
     fontWeight: "bold",
+    backgroundColor: "#eeeeee",
   },
-
-  fecha: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    border: "1pt solid #000",
-    padding: 2,
-    fontSize: 8,
-  },
-
-  row: {
-    flexDirection: "row",
-    marginBottom: 4,
-  },
-
-  label: {
-    fontWeight: "bold",
-  },
-
-  label2: {
-    fontWeight: "bold",
-    textDecoration: "underline",
-    textDecorationStyle: "1pt solid #000",
-  },
-
-  line: {
-    flex: 1,
-    borderBottom: "1pt solid #000",
-  },
-
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-
-  barcodeBox: {
-    width: "65%",
-    height: 45,
-    border: "1pt solid #000",
-    justifyContent: "center",
-    alignItems: "center",
-    fontSize: 8,
-  },
-
-  piecesBox: {
-    width: "30%",
-    height: 45,
-    border: "1pt solid #000",
-    justifyContent: "center",
-    alignItems: "center",
+  tableCell: {
     fontSize: 10,
-    fontWeight: "bold",
   },
 });
 
-const Ticket = ({
-  descripcion,
-  codigo,
-  hechoPor,
-  superviso,
-  piezas,
-  barcodeImg,
-}) => (
-  <View style={styles.ticket}>
-    {/* Header */}
-    <View style={styles.header}>
-      <Image
-        source="/grupo-vizion-logo.png"
-        style={{
-          width: 45,
-          height: 30,
-        }}
-      />
-      <Text style={styles.fecha}>
-        {new Date().toLocaleDateString("es-MX", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })}
-      </Text>
-    </View>
-
-    {/* Campos */}
-    <View style={styles.row}>
-      <Text style={styles.label}>DESCRIPCIÓN: </Text>
-      <Text style={styles.label2}>{descripcion}</Text>
-      <View style={styles.line} />
-    </View>
-
-    <View style={styles.row}>
-      <Text style={styles.label}>CÓDIGO NUMÉRICO: </Text>
-      <Text style={styles.label2}>{codigo}</Text>
-      <View style={styles.line} />
-    </View>
-
-    <View style={styles.row}>
-      <Text style={styles.label}>HECHO POR: </Text>
-      <Text style={styles.label2}>{hechoPor}</Text>
-      <View style={styles.line} />
-    </View>
-
-    <View style={styles.row}>
-      <Text style={styles.label}>SUPERVISÓ: </Text>
-      <Text style={styles.label2}>{superviso}</Text>
-      <View style={styles.line} />
-    </View>
-
-    {/* Parte inferior */}
-    <View style={styles.bottomRow}>
-      <View style={styles.barcodeBox}>
-        <Image source={barcodeImg} style={{ margin: 2, padding: 0 }} />
-        <Text style={styles.label}>{codigo}</Text>
-      </View>
-
-      <View style={styles.piecesBox}>
-        <Text style={{ fontWeight: "bold", fontSize: 24 }}>{piezas}</Text>
-      </View>
-    </View>
-  </View>
-);
-
-export const MyDocument = ({ items }) => (
+export const TablaPDF = ({ items }) => (
   <Document>
-    <Page size="A4" orientation="landscape">
-      <View style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
-        {items.map((marvetData, i) => (
-          <Ticket
-            key={i}
-            descripcion={marvetData.descripcion}
-            codigo={marvetData.codigo}
-            hechoPor={marvetData.hechoPor}
-            superviso={marvetData.superviso}
-            piezas={marvetData.piezas}
-            barcodeImg={marvetData.barcodeImg}
-          />
+    <Page size="A4" style={styles.page}>
+      <View style={styles.table}>
+        {/* Header */}
+        <View
+          style={{
+            ...styles.tableRow,
+            display: "flex",
+            justifyContent: "space-between",
+            borderRight: "1pt solid #000",
+          }}
+        >
+          <Text
+            style={{ ...styles.tableCell, fontSize: 24, fontWeight: "bold" }}
+          >
+            No. de Tarima:
+          </Text>
+          <Text
+            style={{
+              ...styles.tableCell,
+              fontSize: 12,
+              fontWeight: "bold",
+              padding: 2,
+            }}
+          >
+            {new Date().toLocaleDateString("es-MX", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}
+          </Text>
+        </View>
+        <View style={styles.tableRow}>
+          <View style={[styles.tableCol, styles.tableHeader]}>
+            <Text style={styles.tableCell}>No.</Text>
+          </View>
+          <View style={[styles.tableCol, styles.tableHeader]}>
+            <Text style={styles.tableCell}>Upc</Text>
+          </View>
+          <View style={[styles.tableCol, styles.tableHeader]}>
+            <Text style={styles.tableCell}>Descripción</Text>
+          </View>
+          <View style={[styles.tableCol, styles.tableHeader]}>
+            <Text style={styles.tableCell}>Piezas</Text>
+          </View>
+        </View>
+
+        {/* Fila 1 */}
+        {items.map((item) => (
+          <View key={item.codigo} style={styles.tableRow}>
+            <View style={styles.tableCol}>
+              <Text style={styles.tableCell}>{item.position}</Text>
+            </View>
+            <View style={styles.tableCol}>
+              <Text style={styles.tableCell}>{item.codigo}</Text>
+            </View>
+            <View style={styles.tableCol}>
+              <Text style={styles.tableCell}>{item.descripcion}</Text>
+            </View>
+            <View style={styles.tableCol}>
+              <Text style={styles.tableCell}>{item.piezas}</Text>
+            </View>
+          </View>
         ))}
       </View>
     </Page>

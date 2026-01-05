@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MyDocument } from "./pdf-template";
+import { TablaPDF } from "./pdf-template";
 import { pdf } from "@react-pdf/renderer";
 
 import { useTagStore } from "./store";
@@ -26,41 +26,66 @@ const barcodeDetector = new BarcodeDetector({
   formats: ["upc_a", "ean_13", "code_128"],
 });
 
-export default function App() {
-  const { productList, addProduct, removeProduct, deleteList } = useTagStore(
-    (state) => state
-  );
+const searchData = [
+  { codigo: "123456789012", descripcion: "Producto 1", piezas: 10 },
+  { codigo: "987654321098", descripcion: "Producto 2", piezas: 5 },
+  { codigo: "123456789012", descripcion: "Producto 1", piezas: 1 },
+];
 
-  const { madeBy, setMadeBy, supervisedBy, setSupervisedBy } = useTagStore(
+export default function App() {
+  const db = useTagStore((state) => state.db);
+  const setDB = useTagStore((state) => state.setDB);
+  const productList = useTagStore((state) => state.productList);
+  const { addProduct, removeProduct, deleteList } = useTagStore(
     (state) => state
   );
 
   const [form, setForm] = useState({
     descripcion: "",
     codigo: "",
-    hechoPor: madeBy,
-    superviso: supervisedBy,
     piezas: "",
     barcodeImg: null,
   });
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validar extensión
+    if (file.type !== "application/json") {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        console.log(parsed);
+        setDB(parsed);
+      } catch {
+        setDB([]);
+      }
+    };
+
+    reader.readAsText(file);
+  };
+
   const handleChange = (e) => {
+    const value = e.target.value;
     setForm({
       ...form,
-      [e.target.name]: e.target.value,
+      [e.target.name]: value,
     });
   };
 
   const agregarItem = () => {
-    if (!form.descripcion || !form.codigo) return;
+    if (!form.descripcion || !form.codigo || !form.piezas) return;
 
-    addProduct({ ...form, id: Date.now() });
+    addProduct({ ...form, id: Date.now(), position: productList.length + 1 });
 
     setForm({
       descripcion: "",
       codigo: "",
-      hechoPor: madeBy,
-      superviso: madeBy,
       piezas: "",
       barcodeImg: null,
     });
@@ -131,13 +156,14 @@ export default function App() {
   };
 
   const generarPDF = async (items) => {
-    const blob = await pdf(<MyDocument items={items} />).toBlob();
+    console.log("Generando PDF...", items);
+    const blob = await pdf(<TablaPDF items={items} />).toBlob();
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "documento.pdf";
+    link.download = "relacion.pdf";
     link.click();
 
     URL.revokeObjectURL(url);
@@ -145,6 +171,66 @@ export default function App() {
 
   return (
     <div style={{ padding: 20, fontFamily: "Arial" }}>
+      <div>{db.length > 0 ? "Base de datos cargada" : "No hay datos aun"}</div>
+      <input
+        style={{ marginBottom: "20px" }}
+        type="file"
+        accept=".json,application/json"
+        onChange={handleFileChange}
+      />
+      <br />
+      <input
+        name="codigo"
+        type="number"
+        placeholder="Código numérico"
+        maxLength={13}
+        value={form.codigo}
+        onChange={(e) => {
+          const value = e.target.value;
+          const valueFound = db.filter((item) => item.upc === value);
+
+          if (valueFound.length === 1) {
+            setForm({
+              descripcion: "",
+              codigo: "",
+              piezas: "",
+              barcodeImg: null,
+            });
+
+            addProduct({
+              descripcion: valueFound[0].name,
+              codigo: valueFound[0].upc,
+              piezas: valueFound[0].pieces,
+              id: Date.now(),
+              position: productList.length + 1,
+            });
+            return;
+          }
+
+          if (valueFound.length >= 2) {
+            setForm({
+              descripcion: valueFound[0].name,
+              codigo: valueFound[0].upc,
+              piezas: "",
+              barcodeImg: null,
+            });
+            return;
+          }
+
+          handleChange(e);
+        }}
+      />
+
+      <br />
+
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handlePhoto}
+      />
+      <br />
+
       <h2>Registro</h2>
 
       {/* FORMULARIO */}
@@ -154,46 +240,6 @@ export default function App() {
           placeholder="Descripción"
           value={form.descripcion}
           onChange={handleChange}
-        />
-        <br />
-
-        <input
-          name="codigo"
-          type="number"
-          placeholder="Código numérico"
-          value={form.codigo}
-          onChange={handleChange}
-        />
-
-        <br />
-
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handlePhoto}
-        />
-        <br />
-
-        <input
-          name="hechoPor"
-          placeholder="Hecho por"
-          value={madeBy}
-          onChange={(e) => {
-            handleChange(e);
-            setMadeBy(e.target.value);
-          }}
-        />
-        <br />
-
-        <input
-          name="superviso"
-          placeholder="Supervisó"
-          value={supervisedBy}
-          onChange={(e) => {
-            handleChange(e);
-            setSupervisedBy(e.target.value);
-          }}
         />
         <br />
 
@@ -211,9 +257,19 @@ export default function App() {
       </div>
 
       {/* LISTA */}
-      <h3>Lista - Marbetes: {productList.length}</h3>
+      <h3>Lista - Productos: {productList.length}</h3>
 
       {productList.length === 0 && <p>No hay registros</p>}
+
+      {/* ACCIONES */}
+      {productList.length > 0 && (
+        <div style={{ marginBottom: "1rem" }}>
+          <button onClick={deleteList}>Borrar lista</button>{" "}
+          <button onClick={async () => generarPDF(productList)}>
+            Imprimir
+          </button>
+        </div>
+      )}
 
       {productList.map((item) => (
         <div
@@ -227,28 +283,12 @@ export default function App() {
             <b>Código:</b> {item.codigo}
           </p>
           <p>
-            <b>Hecho por:</b> {item.hechoPor}
-          </p>
-          <p>
-            <b>Supervisó:</b> {item.superviso}
-          </p>
-          <p>
             <b>Piezas:</b> {item.piezas}
           </p>
 
           <button onClick={() => removeProduct(item.id)}>Eliminar</button>
         </div>
       ))}
-
-      {/* ACCIONES */}
-      {productList.length > 0 && (
-        <>
-          <button onClick={deleteList}>Borrar lista</button>{" "}
-          <button onClick={async () => generarPDF(productList)}>
-            Imprimir
-          </button>
-        </>
-      )}
     </div>
   );
 }
