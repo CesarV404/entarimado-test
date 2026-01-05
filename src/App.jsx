@@ -26,12 +26,6 @@ const barcodeDetector = new BarcodeDetector({
   formats: ["upc_a", "ean_13", "code_128"],
 });
 
-const searchData = [
-  { codigo: "123456789012", descripcion: "Producto 1", piezas: 10 },
-  { codigo: "987654321098", descripcion: "Producto 2", piezas: 5 },
-  { codigo: "123456789012", descripcion: "Producto 1", piezas: 1 },
-];
-
 export default function App() {
   const db = useTagStore((state) => state.db);
   const setDB = useTagStore((state) => state.setDB);
@@ -214,9 +208,12 @@ export default function App() {
               piezas: "",
               barcodeImg: null,
             });
+
+            alert("Código duplicado");
             return;
           }
 
+          alert("Código no encontrado");
           handleChange(e);
         }}
       />
